@@ -1,0 +1,881 @@
+<!DOCTYPE html>
+<html lang="en" class="dark scroll-smooth">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Storage | Supabase</title>
+  <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='%233ECF8E'><path d='M13.5 22C12.8 23 11.2 22.5 11.2 21.2L11 9.5H21.5C23.5 9.5 24.5 12 23 13.5L13.5 22Z'/><path d='M10.5 2C11.2 1 12.8 1.5 12.8 2.8L13 14.5H2.5C0.5 14.5 -0.5 12 1 10.5L10.5 2Z'/></svg>">
+
+  <!-- Google Fonts: Inter & JetBrains Mono -->
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700;800&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet">
+
+  <!-- Font Awesome Icons -->
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.5.1/css/all.min.css">
+
+  <!-- Tailwind CSS CDN -->
+  <script src="https://cdn.tailwindcss.com"></script>
+  <script>
+    tailwind.config = {
+      darkMode: 'class',
+      theme: {
+        extend: {
+          colors: {
+            brand: {
+              DEFAULT: '#24B47E',
+              dark: '#1fa170',
+              accent: '#3ECF8E',
+            },
+            supa: {
+              bg: '#181818',
+              card: '#1C1C1C',
+              cardInner: '#151515',
+              border: '#2A2A2A',
+              borderLight: '#333333',
+              subtle: '#222222',
+            }
+          },
+          fontFamily: {
+            sans: ['Inter', 'sans-serif'],
+            mono: ['JetBrains Mono', 'monospace'],
+          }
+        }
+      }
+    }
+  </script>
+
+  <style>
+    body {
+      background-color: #181818;
+      color: #EDEDED;
+      font-family: 'Inter', sans-serif;
+      overflow-x: hidden;
+    }
+    
+    /* Custom Scrollbar */
+    ::-webkit-scrollbar {
+      width: 8px;
+    }
+    ::-webkit-scrollbar-track {
+      background: #181818;
+    }
+    ::-webkit-scrollbar-thumb {
+      background: #2e2e2e;
+      border-radius: 4px;
+    }
+    ::-webkit-scrollbar-thumb:hover {
+      background: #3e3e3e;
+    }
+
+    .code-line:before {
+      counter-increment: line;
+      content: counter(line);
+      display: inline-block;
+      width: 2rem;
+      color: #555555;
+      text-align: right;
+      padding-right: 1.25rem;
+      user-select: none;
+    }
+    .code-container {
+      counter-reset: line;
+    }
+  </style>
+</head>
+<body class="bg-[#181818] text-gray-200 antialiased selection:bg-[#24B47E] selection:text-white">
+
+  <!-- ======================== HEADER / NAVBAR ======================== -->
+  <header class="sticky top-0 z-50 bg-[#181818]/90 backdrop-blur-md border-b border-[#242424]">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-10 h-16 flex items-center justify-between">
+      
+      <!-- Left: Logo & Navigation Links -->
+      <div class="flex items-center gap-8">
+        <!-- Supabase Logo -->
+        <a href="#" class="flex items-center gap-2.5 group">
+          <svg class="h-6 w-6 transition-transform group-hover:scale-105" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+            <path d="M13.55 22.02C12.82 22.95 11.24 22.46 11.2 21.28L10.9 9.5H21.5C23.45 9.5 24.5 11.9 23.05 13.45L13.55 22.02Z" fill="#24B47E"/>
+            <path d="M10.45 1.98C11.18 1.05 12.76 1.54 12.8 2.72L13.1 14.5H2.5C0.55 14.5 -0.5 12.1 0.95 10.55L10.45 1.98Z" fill="#3ECF8E"/>
+          </svg>
+          <span class="text-white font-bold text-lg tracking-tight">supabase</span>
+        </a>
+
+        <!-- Desktop Menu -->
+        <nav class="hidden md:flex items-center gap-6 text-sm text-gray-300">
+          <div class="relative group cursor-pointer py-2">
+            <span class="flex items-center gap-1.5 hover:text-white transition-colors">
+              Product
+              <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 group-hover:text-white transition-transform group-hover:rotate-180"></i>
+            </span>
+          </div>
+
+          <div class="relative group cursor-pointer py-2">
+            <span class="flex items-center gap-1.5 hover:text-white transition-colors">
+              Developers
+              <i class="fa-solid fa-chevron-down text-[10px] text-gray-400 group-hover:text-white transition-transform group-hover:rotate-180"></i>
+            </span>
+          </div>
+
+          <a href="#" class="hover:text-white transition-colors">Beta</a>
+          <a href="#" class="hover:text-white transition-colors">Pricing</a>
+        </nav>
+      </div>
+
+      <!-- Right: Action Buttons -->
+      <div class="flex items-center gap-5">
+        <a href="#" class="bg-[#24B47E] hover:bg-[#1fa170] text-white text-xs sm:text-sm font-medium px-3.5 py-1.5 rounded-md transition duration-150 shadow-sm">
+          Start your project
+        </a>
+        <a href="#" class="text-xs sm:text-sm text-gray-300 hover:text-white font-normal transition duration-150 hidden sm:inline-block">
+          Sign in
+        </a>
+        
+        <!-- Mobile Menu Toggle Button -->
+        <button id="mobileMenuBtn" class="md:hidden text-gray-300 hover:text-white p-1">
+          <i class="fa-solid fa-bars text-lg"></i>
+        </button>
+      </div>
+    </div>
+
+    <!-- Mobile Dropdown Menu -->
+    <div id="mobileMenu" class="hidden md:hidden bg-[#1c1c1c] border-b border-[#2a2a2a] px-6 py-4 space-y-3 text-sm text-gray-300">
+      <a href="#" class="block hover:text-white py-1">Product</a>
+      <a href="#" class="block hover:text-white py-1">Developers</a>
+      <a href="#" class="block hover:text-white py-1">Beta</a>
+      <a href="#" class="block hover:text-white py-1">Pricing</a>
+      <div class="pt-2 border-t border-[#2a2a2a] flex justify-between items-center">
+        <a href="#" class="text-gray-300 hover:text-white">Sign in</a>
+      </div>
+    </div>
+  </header>
+
+
+  <!-- ======================== HERO SECTION ======================== -->
+  <section class="relative pt-12 sm:pt-16 pb-20 overflow-hidden">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-8 items-center">
+      
+      <!-- Hero Left: Content -->
+      <div class="lg:col-span-6 z-10">
+        <!-- Tag / Badge -->
+        <div class="inline-flex items-center gap-2.5 bg-[#222222] border border-[#333333] px-2.5 py-1 rounded-md text-xs text-gray-300 mb-6 font-medium">
+          <div class="w-4 h-4 bg-white/10 rounded flex items-center justify-center">
+            <i class="fa-solid fa-database text-[10px] text-white"></i>
+          </div>
+          <span>Storage</span>
+        </div>
+
+        <!-- Main Title -->
+        <h1 class="text-4xl sm:text-5xl lg:text-[56px] font-bold text-white tracking-tight leading-[1.12]">
+          Store and serve<br>any type of digital content
+        </h1>
+
+        <!-- Subtitles -->
+        <p class="mt-6 text-gray-400 text-sm sm:text-base max-w-lg leading-relaxed font-normal">
+          An open source Object store service with unlimited scalability, for any file type.
+        </p>
+        <p class="mt-3 text-gray-400 text-sm sm:text-base max-w-lg leading-relaxed font-normal">
+          With custom policies and permissions that are familiar and easy to implement.
+        </p>
+
+        <!-- CTA Button -->
+        <div class="mt-8">
+          <a href="#" class="inline-block bg-[#24B47E] hover:bg-[#1fa170] text-white font-medium px-5 py-2.5 rounded-md text-sm transition duration-150 shadow-sm">
+            Start a project
+          </a>
+        </div>
+      </div>
+
+      <!-- Hero Right: Mockup Image -->
+      <div class="lg:col-span-6 flex justify-center lg:justify-end">
+        <div class="relative w-full max-w-[580px]">
+          <img 
+            src="images/hero-image.png" 
+            alt="Supabase Storage Hero Preview" 
+            class="w-full h-auto object-contain rounded-xl drop-shadow-2xl hover:scale-[1.01] transition-transform duration-300"
+          />
+        </div>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ======================== THREE PILLARS FEATURE GRID ======================== -->
+  <section class="py-12 border-t border-[#222222]">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-10 grid grid-cols-1 md:grid-cols-3 gap-10 lg:gap-14">
+      
+      <!-- Pillar 1: Interoperable -->
+      <div class="flex flex-col">
+        <div class="flex items-center gap-2 mb-4">
+          <div class="w-7 h-7 bg-white text-black rounded flex items-center justify-center shadow">
+            <i class="fa-solid fa-database text-xs"></i>
+          </div>
+          <span class="text-gray-500 text-xs">✕</span>
+          <div class="w-7 h-7 bg-white text-black rounded flex items-center justify-center shadow">
+            <i class="fa-solid fa-key text-xs"></i>
+          </div>
+          <span class="text-gray-500 text-xs">✕</span>
+          <div class="w-7 h-7 bg-white text-black rounded flex items-center justify-center shadow">
+            <i class="fa-solid fa-table text-xs"></i>
+          </div>
+        </div>
+        <h3 class="text-white font-semibold text-lg tracking-tight">Interoperable</h3>
+        <p class="text-gray-400 text-sm mt-2 leading-relaxed">
+          Integrates well with the rest of Supabase ecosystem, including Auth and Postgres.
+        </p>
+      </div>
+
+      <!-- Pillar 2: Lightning fast -->
+      <div class="flex flex-col">
+        <div class="w-7 h-7 flex items-end gap-1 mb-4 py-1">
+          <span class="w-1 h-2 bg-gray-400 rounded-sm"></span>
+          <span class="w-1 h-3.5 bg-gray-400 rounded-sm"></span>
+          <span class="w-1 h-5 bg-gray-400 rounded-sm"></span>
+          <span class="w-1 h-6 bg-white rounded-sm"></span>
+        </div>
+        <h3 class="text-white font-semibold text-lg tracking-tight">Lightning fast</h3>
+        <p class="text-gray-400 text-sm mt-2 leading-relaxed">
+          Thin API server layer that leverages Postgres' permissions and performance.
+        </p>
+      </div>
+
+      <!-- Pillar 3: Dependable -->
+      <div class="flex flex-col">
+        <div class="w-7 h-7 border border-gray-400 rounded flex items-center justify-center mb-4">
+          <i class="fa-solid fa-check text-xs text-white"></i>
+        </div>
+        <h3 class="text-white font-semibold text-lg tracking-tight">Dependable</h3>
+        <p class="text-gray-400 text-sm mt-2 leading-relaxed">
+          Enterprise-level scalability and durability.
+        </p>
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ======================== SLEEK DASHBOARD SECTION ======================== -->
+  <section class="py-24 border-t border-[#222222]">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-10">
+      
+      <!-- Section Title -->
+      <div class="mb-12">
+        <h2 class="text-3xl sm:text-4xl lg:text-[42px] font-bold text-white tracking-tight">
+          Sleek dashboard for managing your media
+        </h2>
+        <p class="text-gray-300 text-sm sm:text-base mt-3 font-normal">
+          A complete Object Explorer so that any of your team can use.
+        </p>
+        <p class="text-gray-400 text-xs sm:text-sm mt-1">
+          Drag and drop uploading, moving objects, and multiple object selection. As easy as working on your desktop.
+        </p>
+      </div>
+
+      <!-- Dashboard Layout: Graphic & Info -->
+      <div class="grid grid-cols-1 lg:grid-cols-12 gap-10 items-start">
+        
+        <!-- Left Column: Tabs & Graphic -->
+        <div class="lg:col-span-7 flex flex-col">
+          <!-- Explorer Tabs -->
+          <div class="flex flex-wrap items-center gap-1.5 mb-4 text-xs font-medium">
+            <button class="dash-tab px-3 py-1.5 rounded-md bg-[#242424] text-white border border-[#333333] transition" data-view="previews">
+              File previews
+            </button>
+            <button class="dash-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-view="column">
+              Column view
+            </button>
+            <button class="dash-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-view="list">
+              List view
+            </button>
+            <button class="dash-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-view="multiselect">
+              Multi select actions
+            </button>
+            <button class="dash-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-view="navigator">
+              Path navigator
+            </button>
+          </div>
+
+          <!-- Dashboard Mockup Image -->
+          <div class="rounded-xl overflow-hidden border border-[#2A2A2A] bg-[#161616] shadow-2xl">
+            <img 
+              id="dashImage"
+              src="images/dashboard-graphic.png" 
+              alt="Supabase Storage Object Explorer" 
+              class="w-full h-auto object-cover"
+            />
+          </div>
+        </div>
+
+        <!-- Right Column: Details & Example App -->
+        <div class="lg:col-span-5 flex flex-col justify-start lg:pt-10 space-y-8">
+          
+          <!-- Feature Detail -->
+          <div>
+            <h3 id="dashFeatureTitle" class="text-white font-semibold text-xl">File previews</h3>
+            <p id="dashFeatureDesc" class="text-gray-400 text-sm mt-2 leading-relaxed">
+              Preview any media type, including video and audio.
+            </p>
+          </div>
+
+          <!-- Example App Card Container -->
+          <div>
+            <h4 class="text-white font-medium text-sm mb-3">Check out our example app</h4>
+            
+            <!-- Card Box -->
+            <div class="bg-[#1C1C1C] border border-[#2A2A2A] rounded-lg p-5">
+              <h5 class="text-white font-semibold text-sm">Profile management example</h5>
+              <p class="text-gray-400 text-xs mt-2 leading-relaxed">
+                Update a user account with public profile information, including uploading a profile image.
+              </p>
+              
+              <div class="mt-4 flex items-center gap-2 text-xs text-gray-400 font-medium">
+                <span>Created by:</span>
+                <span class="inline-flex items-center gap-1.5 text-white">
+                  <svg class="h-3.5 w-3.5 text-[#3ECF8E]" viewBox="0 0 24 24" fill="none">
+                    <path d="M13.5 22C12.8 23 11.2 22.5 11.2 21.2L11 9.5H21.5C23.5 9.5 24.5 12 23 13.5L13.5 22Z" fill="#24B47E"/>
+                    <path d="M10.5 2C11.2 1 12.8 1.5 12.8 2.8L13 14.5H2.5C0.5 14.5 -0.5 12 1 10.5L10.5 2Z" fill="#3ECF8E"/>
+                  </svg>
+                  supabase
+                </span>
+              </div>
+            </div>
+
+            <!-- Repo link & Deploy button -->
+            <div class="mt-4">
+              <a href="https://github.com/supabase/supabase/tree/master/examples/user-management/nextjs-ts-user-management" target="_blank" class="inline-flex items-center gap-1.5 text-xs text-gray-400 hover:text-white transition">
+                <span>nextjs-ts-user-management</span>
+                <i class="fa-solid fa-arrow-up-right-from-square text-[10px]"></i>
+              </a>
+
+              <div class="mt-3">
+                <a href="https://vercel.com/new" target="_blank" class="inline-flex items-center gap-2 bg-[#0070f3] hover:bg-blue-600 text-white text-xs font-medium px-4 py-2 rounded-md transition shadow-md">
+                  <svg class="w-2.5 h-2.5 fill-current" viewBox="0 0 24 24">
+                    <polygon points="12,2 24,22 0,22"/>
+                  </svg>
+                  Deploy
+                </a>
+              </div>
+            </div>
+
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ======================== SIMPLE AND CONVENIENT APIS ======================== -->
+  <section class="py-24 border-t border-[#222222]">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      
+      <!-- Left Column: API info & subfeatures -->
+      <div class="lg:col-span-5">
+        <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
+          Simple and convenient<br>APIs
+        </h2>
+        
+        <p class="text-gray-300 text-sm mt-4 font-normal">
+          Built from the ground-up for interoperable authentication.
+        </p>
+        <p class="text-gray-400 text-sm mt-2 leading-relaxed">
+          Fast and easy to implement using our powerful library clients. Asset optimization and image transformation coming soon!
+        </p>
+
+        <!-- Two Subfeatures -->
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-6 mt-12">
+          
+          <!-- Subfeature 1 -->
+          <div>
+            <i class="fa-solid fa-wifi text-gray-400 text-lg"></i>
+            <h4 class="text-white font-semibold text-sm mt-3">CDN integration</h4>
+            <p class="text-gray-400 text-xs mt-1.5 leading-relaxed">
+              Serve from the edge to reduce latency.
+            </p>
+            <span class="inline-block mt-3 bg-[#172033] text-[#38bdf8] text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-sky-800/40">
+              Coming soon
+            </span>
+          </div>
+
+          <!-- Subfeature 2 -->
+          <div>
+            <i class="fa-solid fa-arrows-split-up-and-left text-gray-400 text-lg rotate-45"></i>
+            <h4 class="text-white font-semibold text-sm mt-3">Auto transformation & optimisation</h4>
+            <p class="text-gray-400 text-xs mt-1.5 leading-relaxed">
+              Resize and compress your media before you serve it.
+            </p>
+            <span class="inline-block mt-3 bg-[#172033] text-[#38bdf8] text-[11px] font-medium px-2.5 py-0.5 rounded-full border border-sky-800/40">
+              Coming soon
+            </span>
+          </div>
+
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Code Tabs & Snippet -->
+      <div class="lg:col-span-7">
+        
+        <!-- Tabs -->
+        <div class="flex flex-wrap items-center gap-1.5 mb-3 text-xs font-medium">
+          <button class="api-tab px-3 py-1.5 rounded-md bg-[#242424] text-white border border-[#333333] transition" data-code="upload">
+            Upload a file
+          </button>
+          <button class="api-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-code="download">
+            Download a file
+          </button>
+          <button class="api-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-code="list">
+            List files
+          </button>
+          <button class="api-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-code="move">
+            Move and rename files
+          </button>
+          <button class="api-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-code="delete">
+            Delete files
+          </button>
+        </div>
+
+        <!-- Code Block Container -->
+        <div class="bg-[#1C1C1C] border border-[#2A2A2A] rounded-xl p-5 font-mono text-xs relative shadow-2xl overflow-hidden min-h-[310px]">
+          
+          <!-- Copy Button -->
+          <button id="copyApiBtn" class="absolute top-4 right-4 bg-[#242424] hover:bg-[#2e2e2e] text-gray-300 hover:text-white border border-[#333333] text-[11px] font-mono px-2.5 py-1 rounded flex items-center gap-1.5 transition">
+            <i class="fa-regular fa-clone text-[10px]"></i>
+            <span id="copyApiText">Copy</span>
+          </button>
+
+          <!-- Code Content with Line Numbers -->
+          <pre id="apiCodeDisplay" class="code-container text-gray-300 overflow-x-auto pt-2 leading-6"><div class="code-line"></div><div class="code-line"><span class="text-gray-500">// Upload an image to the "avatars" bucket</span></div><div class="code-line"><span class="text-sky-400">const</span> spaceCat = event.target.files[ <span class="text-amber-400">0</span>]</div><div class="code-line"><span class="text-sky-400">const</span>{ data, error } = <span class="text-sky-400">await</span> supabase</div><div class="code-line">  .<span class="text-emerald-400">storage</span></div><div class="code-line">  .<span class="text-emerald-400">from</span>( <span class="text-emerald-300">'avatars'</span>)</div><div class="code-line">  .<span class="text-emerald-400">upload</span>( <span class="text-emerald-300">'space-cat.png'</span>, spaceCat)</div><div class="code-line"></div><div class="code-line"></div><div class="code-line"></div><div class="code-line"></div><div class="code-line"></div><div class="code-line"></div></pre>
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ======================== INTEGRATES NATIVELY WITH AUTH ======================== -->
+  <section class="py-24 border-t border-[#222222]">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-10 grid grid-cols-1 lg:grid-cols-12 gap-12 items-start">
+      
+      <!-- Left Column: Auth info -->
+      <div class="lg:col-span-5">
+        <h2 class="text-3xl sm:text-4xl font-bold text-white tracking-tight leading-tight">
+          Integrates natively<br>with Supabase Auth
+        </h2>
+        
+        <p class="text-gray-300 text-sm mt-4 font-normal">
+          Using Postgres Row Level Security to create Object access rules.
+        </p>
+        <p class="text-gray-400 text-sm mt-2 leading-relaxed">
+          Storage Authorization is built around Postgres so that you can use any combination of SQL, Postgres functions, and even your own metadata to write policies.
+        </p>
+
+        <!-- Documentation Button -->
+        <div class="mt-8">
+          <a href="#" class="inline-flex items-center gap-2 bg-[#222222] hover:bg-[#282828] text-gray-300 hover:text-white border border-[#333333] px-4 py-2.5 rounded-md text-xs font-medium transition">
+            <i class="fa-solid fa-arrow-up-right-from-square text-[11px]"></i>
+            Expore documentation
+          </a>
+        </div>
+      </div>
+
+      <!-- Right Column: Interactive Policy Tabs & SQL Snippet -->
+      <div class="lg:col-span-7">
+        
+        <!-- Tabs -->
+        <div class="flex flex-wrap items-center gap-1.5 mb-3 text-xs font-medium">
+          <button class="auth-tab px-3 py-1.5 rounded-md bg-[#242424] text-white border border-[#333333] transition" data-policy="public-bucket">
+            Public access to a bucket
+          </button>
+          <button class="auth-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-policy="public-folder">
+            Public access to a folder
+          </button>
+          <button class="auth-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition" data-policy="auth-bucket">
+            Authenticated access to a buck
+          </button>
+        </div>
+
+        <!-- SQL Block & Explanation Card -->
+        <div class="bg-[#1C1C1C] border border-[#2A2A2A] rounded-xl overflow-hidden shadow-2xl">
+          
+          <!-- Code Editor Area -->
+          <div class="p-5 font-mono text-xs relative min-h-[140px]">
+            <!-- Copy Button -->
+            <button id="copyAuthBtn" class="absolute top-4 right-4 bg-[#242424] hover:bg-[#2e2e2e] text-gray-300 hover:text-white border border-[#333333] text-[11px] font-mono px-2.5 py-1 rounded flex items-center gap-1.5 transition">
+              <i class="fa-regular fa-clone text-[10px]"></i>
+              <span id="copyAuthText">Copy</span>
+            </button>
+
+            <!-- SQL Code -->
+            <pre id="authCodeDisplay" class="code-container text-gray-300 overflow-x-auto pt-1 leading-6"><div class="code-line"><span class="text-sky-400">create policy</span> <span class="text-emerald-300">"Public Access"</span></div><div class="code-line"><span class="text-sky-400">on</span> storage.objects <span class="text-sky-400">for all</span></div><div class="code-line"><span class="text-sky-400">using</span>( bucket_id = <span class="text-emerald-300">'avatars'</span>);</div><div class="code-line"></div></pre>
+          </div>
+
+          <!-- Divider -->
+          <div class="border-t border-[#2A2A2A]"></div>
+
+          <!-- Explanatory Footer Box -->
+          <div class="p-5 bg-[#171717]">
+            <h4 id="authPolicyTitle" class="text-white font-semibold text-sm">Allow public CRUD access to a bucket</h4>
+            <p id="authPolicyDesc" class="text-gray-400 text-xs mt-1.5 leading-relaxed">
+              This will allow any user access to the bucket named 'avatars'
+            </p>
+          </div>
+
+        </div>
+
+      </div>
+
+    </div>
+  </section>
+
+
+  <!-- ======================== CTA PRE-FOOTER ======================== -->
+  <section class="py-28 border-t border-[#222222] text-center">
+    <div class="max-w-3xl mx-auto px-6">
+      <h2 class="text-3xl sm:text-4xl lg:text-[46px] text-gray-300 font-normal tracking-tight">
+        Build in a weekend, <span class="text-white font-bold">scale to millions</span>
+      </h2>
+      <div class="mt-8">
+        <a href="#" class="inline-block bg-[#24B47E] hover:bg-[#1fa170] text-white font-medium px-5 py-2.5 rounded-md text-sm transition duration-150 shadow-lg shadow-[#24B47E]/20">
+          Start your project
+        </a>
+      </div>
+    </div>
+  </section>
+
+
+  <!-- ======================== FOOTER ======================== -->
+  <footer class="border-t border-[#242424] pt-16 pb-12 bg-[#181818]">
+    <div class="max-w-[1280px] mx-auto px-6 lg:px-10">
+      
+      <!-- Top Grid: Brand & Links -->
+      <div class="grid grid-cols-2 sm:grid-cols-3 lg:grid-cols-6 gap-8 lg:gap-10 mb-16">
+        
+        <!-- Brand & Socials -->
+        <div class="col-span-2 sm:col-span-3 lg:col-span-2">
+          <!-- Logo -->
+          <a href="#" class="flex items-center gap-2.5">
+            <svg class="h-6 w-6" viewBox="0 0 24 24" fill="none">
+              <path d="M13.55 22.02C12.82 22.95 11.24 22.46 11.2 21.28L10.9 9.5H21.5C23.45 9.5 24.5 11.9 23.05 13.45L13.55 22.02Z" fill="#24B47E"/>
+              <path d="M10.45 1.98C11.18 1.05 12.76 1.54 12.8 2.72L13.1 14.5H2.5C0.55 14.5 -0.5 12.1 0.95 10.55L10.45 1.98Z" fill="#3ECF8E"/>
+            </svg>
+            <span class="text-white font-bold text-lg tracking-tight">supabase</span>
+          </a>
+
+          <!-- Social Icons -->
+          <div class="flex items-center gap-4 mt-6 text-gray-400 text-base">
+            <a href="https://twitter.com/supabase" target="_blank" class="hover:text-white transition">
+              <i class="fa-brands fa-twitter"></i>
+            </a>
+            <a href="https://github.com/supabase" target="_blank" class="hover:text-white transition">
+              <i class="fa-brands fa-github"></i>
+            </a>
+          </div>
+        </div>
+
+        <!-- Col 1: Product -->
+        <div>
+          <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">Product</h4>
+          <ul class="space-y-2.5 text-xs text-gray-300">
+            <li><a href="#" class="hover:text-white transition">Database</a></li>
+            <li><a href="#" class="hover:text-white transition">Authentication</a></li>
+            <li><a href="#" class="hover:text-white transition">Storage</a></li>
+            <li><a href="#" class="hover:text-white transition">Functions</a></li>
+            <li><a href="#" class="hover:text-white transition">Coming soon</a></li>
+            <li><a href="#" class="hover:text-white transition">Pricing</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 2: Resources -->
+        <div>
+          <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">Resources</h4>
+          <ul class="space-y-2.5 text-xs text-gray-300">
+            <li><a href="#" class="hover:text-white transition">Support</a></li>
+            <li><a href="#" class="hover:text-white transition">Case Studies</a></li>
+            <li><a href="#" class="hover:text-white transition">System Status</a></li>
+            <li><a href="#" class="hover:text-white transition">Terms of service</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 3: Developers -->
+        <div>
+          <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">Developers</h4>
+          <ul class="space-y-2.5 text-xs text-gray-300">
+            <li><a href="#" class="hover:text-white transition">Documentation</a></li>
+            <li><a href="#" class="hover:text-white transition">API Reference</a></li>
+            <li><a href="#" class="hover:text-white transition">Guides</a></li>
+          </ul>
+        </div>
+
+        <!-- Col 4: Company -->
+        <div>
+          <h4 class="text-gray-400 text-xs font-semibold uppercase tracking-wider mb-4">Company</h4>
+          <ul class="space-y-2.5 text-xs text-gray-300">
+            <li><a href="#" class="hover:text-white transition">Blog</a></li>
+            <li><a href="#" class="hover:text-white transition">Open Source</a></li>
+            <li><a href="#" class="hover:text-white transition">Humans.txt</a></li>
+            <li><a href="#" class="hover:text-white transition">Lawyers.txt</a></li>
+          </ul>
+        </div>
+
+      </div>
+
+      <!-- Bottom Row: Copyright & Theme Toggle -->
+      <div class="border-t border-[#242424] pt-8 flex flex-col sm:flex-row items-center justify-between gap-4 text-xs text-gray-500">
+        <p>© Supabase Inc</p>
+
+        <!-- Theme Toggle Switch -->
+        <div class="flex items-center gap-3">
+          <i class="fa-regular fa-sun text-gray-400 text-sm"></i>
+          
+          <button id="themeToggle" class="w-11 h-6 bg-[#2a2a2a] rounded-full p-0.5 transition-colors duration-200 focus:outline-none flex items-center justify-end">
+            <span class="w-5 h-5 bg-[#555555] rounded-full shadow-md transition-transform duration-200"></span>
+          </button>
+          
+          <i class="fa-solid fa-moon text-gray-400 text-sm"></i>
+        </div>
+      </div>
+
+    </div>
+  </footer>
+
+
+  <!-- ======================== INTERACTIVE JAVASCRIPT ======================== -->
+  <script>
+    // 1. Mobile Menu Toggle
+    const mobileMenuBtn = document.getElementById('mobileMenuBtn');
+    const mobileMenu = document.getElementById('mobileMenu');
+    mobileMenuBtn.addEventListener('click', () => {
+      mobileMenu.classList.toggle('hidden');
+    });
+
+    // 2. Sleek Dashboard Tabs
+    const dashTabs = document.querySelectorAll('.dash-tab');
+    const dashFeatureTitle = document.getElementById('dashFeatureTitle');
+    const dashFeatureDesc = document.getElementById('dashFeatureDesc');
+
+    const dashData = {
+      previews: {
+        title: 'File previews',
+        desc: 'Preview any media type, including video and audio.'
+      },
+      column: {
+        title: 'Column view',
+        desc: 'Navigate nested directory trees effortlessly with Finder-style Miller columns.'
+      },
+      list: {
+        title: 'List view',
+        desc: 'Detailed tabular inspection with file size, MIME type, and last modified dates.'
+      },
+      multiselect: {
+        title: 'Multi select actions',
+        desc: 'Batch download, move, or delete hundreds of media files simultaneously.'
+      },
+      navigator: {
+        title: 'Path navigator',
+        desc: 'Fast breadcrumb navigation with quick copyable bucket paths and deep links.'
+      }
+    };
+
+    dashTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        dashTabs.forEach(t => {
+          t.className = 'dash-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition';
+        });
+        tab.className = 'dash-tab px-3 py-1.5 rounded-md bg-[#242424] text-white border border-[#333333] transition';
+        const key = tab.getAttribute('data-view');
+        if (dashData[key]) {
+          dashFeatureTitle.textContent = dashData[key].title;
+          dashFeatureDesc.textContent = dashData[key].desc;
+        }
+      });
+    });
+
+    // 3. API Snippets Data & Tab Handling
+    const apiCodeSnippets = {
+      upload: `
+// Upload an image to the "avatars" bucket
+const spaceCat = event.target.files[ 0]
+const{ data, error } = await supabase
+  .storage
+  .from( 'avatars')
+  .upload( 'space-cat.png', spaceCat)
+
+
+
+
+
+`,
+      download: `
+// Download an image from the "avatars" bucket
+const { data, error } = await supabase
+  .storage
+  .from('avatars')
+  .download('space-cat.png')
+
+
+
+
+
+`,
+      list: `
+// List all files inside the "avatars" folder
+const { data, error } = await supabase
+  .storage
+  .from('avatars')
+  .list('public', {
+    limit: 100,
+    offset: 0,
+    sortBy: { column: 'name', order: 'asc' },
+  })
+`,
+      move: `
+// Move and rename files inside storage
+const { data, error } = await supabase
+  .storage
+  .from('avatars')
+  .move('public/space-cat.png', 'archive/space-cat-old.png')
+
+
+
+
+`,
+      delete: `
+// Delete multiple files from a bucket
+const { data, error } = await supabase
+  .storage
+  .from('avatars')
+  .remove(['space-cat.png', 'demo-video.mp4'])
+
+
+
+
+`
+    };
+
+    function renderApiCode(codeText) {
+      const lines = codeText.split('\n');
+      let html = '';
+      lines.forEach(line => {
+        let highlighted = line
+          .replace(/(const|await|return)/g, '<span class="text-sky-400">$1</span>')
+          .replace(/(\.storage|\.from|\.upload|\.download|\.list|\.move|\.remove)/g, '<span class="text-emerald-400">$1</span>')
+          .replace(/('avatars'|'space-cat\.png'|'public'|'archive\/space-cat-old\.png'|'demo-video\.mp4'|"avatars")/g, '<span class="text-emerald-300">$1</span>')
+          .replace(/\b(0|100)\b/g, '<span class="text-amber-400">$1</span>')
+          .replace(/(\/\/.*)/g, '<span class="text-gray-500">$1</span>');
+        html += `<div class="code-line">${highlighted}</div>`;
+      });
+      document.getElementById('apiCodeDisplay').innerHTML = html;
+    }
+
+    const apiTabs = document.querySelectorAll('.api-tab');
+    let currentApiSnippet = apiCodeSnippets.upload;
+
+    apiTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        apiTabs.forEach(t => {
+          t.className = 'api-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition';
+        });
+        tab.className = 'api-tab px-3 py-1.5 rounded-md bg-[#242424] text-white border border-[#333333] transition';
+        const key = tab.getAttribute('data-code');
+        currentApiSnippet = apiCodeSnippets[key] || '';
+        renderApiCode(currentApiSnippet);
+      });
+    });
+
+    // 4. Auth Policies Data & Tab Handling
+    const authPolicies = {
+      'public-bucket': {
+        title: 'Allow public CRUD access to a bucket',
+        desc: "This will allow any user access to the bucket named 'avatars'",
+        sql: `create policy "Public Access"
+on storage.objects for all
+using( bucket_id = 'avatars');
+`
+      },
+      'public-folder': {
+        title: 'Allow public read access to a specific folder',
+        desc: "Gives anonymous read access exclusively to objects located under the 'public/' prefix.",
+        sql: `create policy "Public Folder Read"
+on storage.objects for select
+using ( bucket_id = 'avatars' and (storage.foldername(name))[1] = 'public' );
+`
+      },
+      'auth-bucket': {
+        title: 'Allow authenticated users full access',
+        desc: "Restricts all file modifications and uploads strictly to verified logged-in users.",
+        sql: `create policy "Authenticated Users Only"
+on storage.objects for all to authenticated
+using ( bucket_id = 'avatars' );
+`
+      }
+    };
+
+    function renderAuthCode(sqlText) {
+      const lines = sqlText.split('\n');
+      let html = '';
+      lines.forEach(line => {
+        let highlighted = line
+          .replace(/(create policy|on|for all|for select|to authenticated|using|and)/g, '<span class="text-sky-400">$1</span>')
+          .replace(/(".*?"|'.*?')/g, '<span class="text-emerald-300">$1</span>');
+        html += `<div class="code-line">${highlighted}</div>`;
+      });
+      document.getElementById('authCodeDisplay').innerHTML = html;
+    }
+
+    const authTabs = document.querySelectorAll('.auth-tab');
+    let currentAuthSnippet = authPolicies['public-bucket'].sql;
+
+    authTabs.forEach(tab => {
+      tab.addEventListener('click', () => {
+        authTabs.forEach(t => {
+          t.className = 'auth-tab px-3 py-1.5 rounded-md text-gray-400 hover:text-white transition';
+        });
+        tab.className = 'auth-tab px-3 py-1.5 rounded-md bg-[#242424] text-white border border-[#333333] transition';
+        const key = tab.getAttribute('data-policy');
+        if (authPolicies[key]) {
+          currentAuthSnippet = authPolicies[key].sql;
+          renderAuthCode(currentAuthSnippet);
+          document.getElementById('authPolicyTitle').textContent = authPolicies[key].title;
+          document.getElementById('authPolicyDesc').textContent = authPolicies[key].desc;
+        }
+      });
+    });
+
+    // 5. Copy Buttons
+    const copyApiBtn = document.getElementById('copyApiBtn');
+    const copyApiText = document.getElementById('copyApiText');
+    copyApiBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentApiSnippet.trim()).then(() => {
+        copyApiText.textContent = 'Copied!';
+        setTimeout(() => { copyApiText.textContent = 'Copy'; }, 2000);
+      });
+    });
+
+    const copyAuthBtn = document.getElementById('copyAuthBtn');
+    const copyAuthText = document.getElementById('copyAuthText');
+    copyAuthBtn.addEventListener('click', () => {
+      navigator.clipboard.writeText(currentAuthSnippet.trim()).then(() => {
+        copyAuthText.textContent = 'Copied!';
+        setTimeout(() => { copyAuthText.textContent = 'Copy'; }, 2000);
+      });
+    });
+
+    // 6. Theme Toggle Animation
+    const themeToggle = document.getElementById('themeToggle');
+    let isDark = true;
+    themeToggle.addEventListener('click', () => {
+      isDark = !isDark;
+      if (!isDark) {
+        themeToggle.classList.replace('justify-end', 'justify-start');
+        themeToggle.querySelector('span').classList.replace('bg-[#555555]', 'bg-[#24B47E]');
+      } else {
+        themeToggle.classList.replace('justify-start', 'justify-end');
+        themeToggle.querySelector('span').classList.replace('bg-[#24B47E]', 'bg-[#555555]');
+      }
+    });
+  </script>
+</body>
+</html>
